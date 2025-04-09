@@ -2,41 +2,75 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>PDF Viewer</title>
+  <title>Searchable PDF Viewer v1</title>
   <style>
-    canvas { display: block; margin: 20px auto; }
+    #pdf-container {
+      position: relative;
+    }
+    canvas {
+      display: block;
+    }
+    .textLayer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      color: transparent; /* Optional: hide selectable text visually */
+    }
   </style>
 </head>
 <body>
-  <h1 style="text-align: center;">AnL Guide Viewer</h1>
-  <div id="pdf-container"></div>
 
-  <script src="pdfjs/pdf.js"></script>
-  <script>
-    // Tell PDF.js where its worker script is
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js';
+<div id="pdf-container"></div>
 
-    const container = document.getElementById('pdf-container');
-    const files = ['pdfs/part1.pdf', 'pdfs/part2.pdf', 'pdfs/part3.pdf'];
+<script src="pdfjs/pdf.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js';
 
-    // Render all PDFs
-    files.forEach(src => {
-      const loadingTask = pdfjsLib.getDocument(src);
-      loadingTask.promise.then(pdf => {
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          pdf.getPage(pageNum).then(page => {
-            const viewport = page.getViewport({ scale: 1.2 });
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
+  const url = 'pdfs/part1.pdf';
+  const container = document.getElementById('pdf-container');
 
-            page.render({ canvasContext: context, viewport: viewport });
-            container.appendChild(canvas);
+  pdfjsLib.getDocument(url).promise.then(pdf => {
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      pdf.getPage(pageNum).then(page => {
+        const scale = 1.5;
+        const viewport = page.getViewport({ scale });
+
+        // Canvas rendering
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const canvasWrapper = document.createElement('div');
+        canvasWrapper.style.position = 'relative';
+        canvasWrapper.appendChild(canvas);
+        container.appendChild(canvasWrapper);
+
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport
+        };
+        page.render(renderContext);
+
+        // Text layer rendering
+        page.getTextContent().then(textContent => {
+          const textLayerDiv = document.createElement('div');
+          textLayerDiv.className = 'textLayer';
+          textLayerDiv.style.width = `${viewport.width}px`;
+          textLayerDiv.style.height = `${viewport.height}px`;
+
+          canvasWrapper.appendChild(textLayerDiv);
+
+          pdfjsLib.renderTextLayer({
+            textContent: textContent,
+            container: textLayerDiv,
+            viewport: viewport,
+            textDivs: []
           });
-        }
+        });
       });
-    });
-  </script>
+    }
+  });
+</script>
 </body>
 </html>
