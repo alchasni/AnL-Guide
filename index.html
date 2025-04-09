@@ -2,19 +2,29 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Searchable PDF Viewer v1</title>
+  <title>PDF.js Viewer with Text Layer2</title>
   <style>
     #pdf-container {
+      width: 100%;
+      max-width: 800px;
+      margin: auto;
+    }
+    .page-container {
       position: relative;
+      margin-bottom: 20px;
     }
     canvas {
       display: block;
+      width: 100%;
     }
     .textLayer {
       position: absolute;
       top: 0;
       left: 0;
-      color: transparent; /* Optional: hide selectable text visually */
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -26,51 +36,62 @@
 <script>
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js';
 
-  const url = 'pdfs/part1.pdf';
+  const pdfUrls = [
+    'pdfs/part1.pdf',
+    'pdfs/part2.pdf',
+    'pdfs/part3.pdf'
+  ];
+
   const container = document.getElementById('pdf-container');
+  const scale = 1.5;
 
-  pdfjsLib.getDocument(url).promise.then(pdf => {
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      pdf.getPage(pageNum).then(page => {
-        const scale = 1.5;
-        const viewport = page.getViewport({ scale });
+  pdfUrls.forEach(url => {
+    pdfjsLib.getDocument(url).promise.then(pdf => {
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        pdf.getPage(pageNum).then(page => {
+          const viewport = page.getViewport({ scale });
 
-        // Canvas rendering
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
+          const pageContainer = document.createElement('div');
+          pageContainer.className = 'page-container';
+          pageContainer.style.width = `${viewport.width}px`;
+          pageContainer.style.height = `${viewport.height}px`;
 
-        const canvasWrapper = document.createElement('div');
-        canvasWrapper.style.position = 'relative';
-        canvasWrapper.appendChild(canvas);
-        container.appendChild(canvasWrapper);
+          // Canvas
+          const canvas = document.createElement('canvas');
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const context = canvas.getContext('2d');
 
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport
-        };
-        page.render(renderContext);
+          pageContainer.appendChild(canvas);
+          container.appendChild(pageContainer);
 
-        // Text layer rendering
-        page.getTextContent().then(textContent => {
-          const textLayerDiv = document.createElement('div');
-          textLayerDiv.className = 'textLayer';
-          textLayerDiv.style.width = `${viewport.width}px`;
-          textLayerDiv.style.height = `${viewport.height}px`;
+          page.render({
+            canvasContext: context,
+            viewport: viewport
+          });
 
-          canvasWrapper.appendChild(textLayerDiv);
+          // Text layer
+          page.getTextContent().then(textContent => {
+            const textLayerDiv = document.createElement('div');
+            textLayerDiv.className = 'textLayer';
+            textLayerDiv.style.width = `${viewport.width}px`;
+            textLayerDiv.style.height = `${viewport.height}px`;
 
-          pdfjsLib.renderTextLayer({
-            textContent: textContent,
-            container: textLayerDiv,
-            viewport: viewport,
-            textDivs: []
+            pageContainer.appendChild(textLayerDiv);
+
+            pdfjsLib.renderTextLayer({
+              textContent: textContent,
+              container: textLayerDiv,
+              viewport: viewport,
+              textDivs: [],
+              enhanceTextSelection: true
+            });
           });
         });
-      });
-    }
+      }
+    });
   });
 </script>
+
 </body>
 </html>
