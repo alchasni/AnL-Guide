@@ -2,95 +2,82 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>PDF.js Viewer with Text Layer2</title>
+  <title>Simple PDF Viewer - Dark Mode</title>
   <style>
-    #pdf-container {
-      width: 100%;
-      max-width: 800px;
-      margin: auto;
+    body {
+      margin: 0;
+      padding: 0;
+      background: #121212;
+      font-family: sans-serif;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
     }
-    .page-container {
-      position: relative;
-      margin-bottom: 20px;
+
+    iframe {
+      width: 80%;
+      height: 90vh;
+      border: 1px solid #444;
+      border-radius: 10px;
+      background: #1e1e1e;
     }
-    canvas {
-      display: block;
-      width: 100%;
+
+    .button-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
     }
-    .textLayer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      overflow: hidden;
-      pointer-events: none;
+
+    .nav-button {
+      background: #333;
+      color: #ccc;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .nav-button:hover {
+      background: #555;
+      color: white;
     }
   </style>
 </head>
 <body>
 
-<div id="pdf-container"></div>
+<iframe id="pdfFrame" src="pdfs/part1.pdf"></iframe>
 
-<script src="pdfjs/pdf.js"></script>
+<div class="button-container">
+  <button class="nav-button" onclick="goToPrevPDF()">← Prev</button>
+  <button class="nav-button" onclick="goToNextPDF()">Next →</button>
+</div>
+
 <script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'pdfjs/pdf.worker.js';
+  const pdfFiles = ['pdfs/part1.pdf', 'pdfs/part2.pdf', 'pdfs/part3.pdf'];
+  let currentIndex = 0;
 
-  const pdfUrls = [
-    'pdfs/part1.pdf',
-    'pdfs/part2.pdf',
-    'pdfs/part3.pdf'
-  ];
+  function goToNextPDF() {
+    currentIndex = (currentIndex + 1) % pdfFiles.length;
+    updatePDF();
+  }
 
-  const container = document.getElementById('pdf-container');
-  const scale = 1.5;
+  function goToPrevPDF() {
+    currentIndex = (currentIndex - 1 + pdfFiles.length) % pdfFiles.length;
+    updatePDF();
+  }
 
-  pdfUrls.forEach(url => {
-    pdfjsLib.getDocument(url).promise.then(pdf => {
-      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        pdf.getPage(pageNum).then(page => {
-          const viewport = page.getViewport({ scale });
-
-          const pageContainer = document.createElement('div');
-          pageContainer.className = 'page-container';
-          pageContainer.style.width = `${viewport.width}px`;
-          pageContainer.style.height = `${viewport.height}px`;
-
-          // Canvas
-          const canvas = document.createElement('canvas');
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const context = canvas.getContext('2d');
-
-          pageContainer.appendChild(canvas);
-          container.appendChild(pageContainer);
-
-          page.render({
-            canvasContext: context,
-            viewport: viewport
-          });
-
-          // Text layer
-          page.getTextContent().then(textContent => {
-            const textLayerDiv = document.createElement('div');
-            textLayerDiv.className = 'textLayer';
-            textLayerDiv.style.width = `${viewport.width}px`;
-            textLayerDiv.style.height = `${viewport.height}px`;
-
-            pageContainer.appendChild(textLayerDiv);
-
-            pdfjsLib.renderTextLayer({
-              textContent: textContent,
-              container: textLayerDiv,
-              viewport: viewport,
-              textDivs: [],
-              enhanceTextSelection: true
-            });
-          });
-        });
-      }
-    });
-  });
+  function updatePDF() {
+    document.getElementById('pdfFrame').src = pdfFiles[currentIndex];
+  }
 </script>
 
 </body>
