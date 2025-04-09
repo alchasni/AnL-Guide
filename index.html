@@ -1,84 +1,208 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple PDF Viewer - Dark Mode</title>
+  <title>Chasni's Guide</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      padding: 0;
-      background: #121212;
-      font-family: sans-serif;
-      color: #eee;
+      font-family: 'Baloo 2', cursive;
+      background-color: #1a1e2a;
+      color: #fff;
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #13161f;
+      padding: 10px;
+      display: flex;
       flex-direction: column;
-      min-height: 100vh;
-    }
-
-    iframe {
-      width: 80%;
-      height: 90vh;
-      border: 1px solid #444;
-      border-radius: 10px;
-      background: #1e1e1e;
-    }
-
-    .button-container {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      display: flex;
       gap: 10px;
-      z-index: 1000;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    .nav-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
     }
 
     .nav-button {
-      background: #333;
-      color: #ccc;
-      padding: 10px 20px;
-      font-size: 16px;
+      font-family: 'Baloo 2', cursive;
+      background-color: transparent;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 10px;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      gap: 12px;
+      border-radius: 8px;
+      transition: background-color 0.2s;
+      text-align: left;
+    }
+
+    .nav-button i {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .nav-button.active {
+      background-color: #3a3f4b;
+    }
+    .footer-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+      padding: 10px;
+    }
+    .footer-button {
+      background: #1e1e1e;
+      color: #bbb;
+      padding: 14px 18px;
+      text-align: left;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-      transition: background 0.3s, color 0.3s;
+      font-size: 18px;
+      font-weight: bold;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      width: 100%;
+      display: inline-block;
+      box-sizing: border-box;
     }
 
-    .nav-button:hover {
-      background: #555;
-      color: white;
+    /* Hover Effect */
+    .footer-button:hover {
+      color: #fff;
+    }
+
+    /* Ko-fi specific */
+    .footer-button.kofi {
+      border-left: 4px solid #f66;
+    }
+
+    .footer-button.kofi:hover {
+      background: #2a1a1a;
+      box-shadow: 0 0 8px #f66a;
+    }
+
+    /* Discord specific */
+    .footer-button.discord {
+      border-left: 4px solid #4f8ef7;
+    }
+
+    .footer-button.discord:hover {
+      background: #102430;
+      box-shadow: 0 0 8px #4f8ef7;
+    }
+
+    .content {
+      flex: 1;
+      background-color: #12151d;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00000044;
+    }
+
+    /* Responsive Layout */
+    @media (max-width: 768px), (max-height: 600px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 10px;
+        gap: 10px;
+        height: auto;
+      }
+
+      .nav-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+        grid-auto-rows: 50px;
+        width: 100%;
+        gap: 10px;
+      }
+
+      .nav-button {
+        font-size: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      .nav-button i {
+        font-size: 20px;
+      }
+
+      .footer-buttons {
+        flex-direction: row;
+        justify-content: center;
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
+<div class="sidebar">
+  <div class="nav-buttons" id="pdfMenu">
+    <button class="nav-button active" data-pdf="pdfs/General Guide.pdf" title="General Guide"><i class="fa-solid fa-book"></i>General Guide</button>
+    <button class="nav-button" data-pdf="pdfs/Attributes Perk.pdf" title="Attributes"><i class="fa-solid fa-dumbbell"></i>Attributes Perk</button>
+    <button class="nav-button" data-pdf="pdfs/Abilities Perk.pdf" title="Abilities"><i class="fa-solid fa-wand-magic-sparkles"></i>Abilities Perk</button>
+    <button class="nav-button" data-pdf="pdfs/Produce Perk.pdf" title="Produce"><i class="fa-solid fa-hammer"></i>Produce Perk</button>
+    <button class="nav-button" data-pdf="pdfs/Expert Perk.pdf" title="Expertise"><i class="fa-solid fa-user-graduate"></i>Expert Perk</button>
+    <button class="nav-button" data-pdf="pdfs/Instant Perk.pdf" title="Instant"><i class="fa-solid fa-bolt"></i>Instant Perk</button>
+    <button class="nav-button" data-pdf="pdfs/Global Perk.pdf" title="Global"><i class="fa-solid fa-globe"></i>Global Perk</button>
+    <button class="nav-button" data-pdf="pdfs/Reign of Giants Bosses.pdf" title="RoG Bosses"><i class="fa-solid fa-paw"></i>Reign of Giants Bosses</button>
+  </div>
+  <div class="footer-buttons">
+    <a class="footer-button kofi" href="https://ko-fi.com/chasni" target="_blank">☕ Support on Ko-fi</a>
+    <a class="footer-button discord" href="https://discord.com/invite/57T46hGXE8" target="_blank">💬 Join Discord</a>
+  </div>
+</div>
 
-<iframe id="pdfFrame" src="pdfs/part1.pdf"></iframe>
-
-<div class="button-container">
-  <button class="nav-button" onclick="goToPrevPDF()">← Prev</button>
-  <button class="nav-button" onclick="goToNextPDF()">Next →</button>
+<div class="content">
+  <iframe id="pdfViewer" src="pdfs/General Guide.pdf"></iframe>
 </div>
 
 <script>
-  const pdfFiles = ['pdfs/part1.pdf', 'pdfs/part2.pdf', 'pdfs/part3.pdf'];
-  let currentIndex = 0;
+  const buttons = document.querySelectorAll(".nav-button");
+  const viewer = document.getElementById("pdfViewer");
 
-  function goToNextPDF() {
-    currentIndex = (currentIndex + 1) % pdfFiles.length;
-    updatePDF();
-  }
-
-  function goToPrevPDF() {
-    currentIndex = (currentIndex - 1 + pdfFiles.length) % pdfFiles.length;
-    updatePDF();
-  }
-
-  function updatePDF() {
-    document.getElementById('pdfFrame').src = pdfFiles[currentIndex];
-  }
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      viewer.src = btn.dataset.pdf;
+    });
+  });
 </script>
-
 </body>
 </html>
